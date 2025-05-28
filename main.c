@@ -7,6 +7,7 @@
 #include <string.h>
 #include "parse_req.h"
 #include <unistd.h>
+#include "client.h"
 
 int main()
 {
@@ -16,10 +17,7 @@ int main()
    while(1)
    {
        //create client socket and accept
-       struct sockaddr_in client_addr;
-       socklen_t client_len = sizeof(client_addr);
-       
-       int client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &client_len);
+       int client_fd = create_client(server_fd);
        //create buffer and clear it
        char buffer[4096];
        memset(buffer, 0, sizeof(buffer));
