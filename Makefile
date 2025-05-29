@@ -2,24 +2,27 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -g
 
-# Output binary
+# Output binary name
 OUT = server
 
 # Source files
-SRC = main.c server.c parse_req.c
+SRC = main.c server.c client.c parse_req.c
 
-# Object files (optional for better control)
-OBJ = main.o server.o parse_req.o
+# Object files (built from source files)
+OBJ = $(SRC:.c=.o)
 
-# Default target
+# Default rule
 all: $(OUT)
 
+# Linking final binary
 $(OUT): $(OBJ)
 	$(CC) $(CFLAGS) -o $(OUT) $(OBJ)
 
+# Compile each .c into .o
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# Cleanup rule
 clean:
-	rm -f $(OUT) *.o
+	rm -f *.o $(OUT)
 
