@@ -30,13 +30,18 @@ int init_server(int port)
    //check for failure
    if(bind_ < 0)
    {	   
-   perror("bind");
-   close(server_file_desc);
-   exit(EXIT_FAILURE);
+      perror("bind");
+      close(server_file_desc);
+      exit(EXIT_FAILURE);
    }
    //now listen
    int listen_ = listen(server_file_desc, 10);
-
+   if(listen_ < 0)
+   {
+       perror("listen");
+       close(server_file_desc);
+       exit(EXIT_FAILURE);
+   }
    //return the socket
    return server_file_desc;
 
