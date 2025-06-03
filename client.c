@@ -45,15 +45,29 @@ void handle_client_request(int client_fd)
     printf("Could not parse\n");
   }
     //Response
-    const char *body = "Hello World!\n";
+    const char *status_line = "HTTP/1.1 200 OK";
+    const char *body;
+    if(strcmp(path, "/hello") == 0)
+    {
+      body = "Hello World!\n";
+    }
+    else if(strcmp(path, "/about") == 0)
+    {
+      body = "C Web server\n";
+    }
+    else
+    {
+      body = "Error 404 not found\n";
+      status_line = "HTTP/1.1 404 Not Found";
+    }
     char response[1024];
     snprintf(response, sizeof(response),
-	     "HTTP/1.1 200 OK\r\n"
+	     "%s\r\n"
 	     "Content-Type: text/plain\r\n"
 	     "Content-Length: %lu\r\n"
 	     "\r\n"
 	     "%s",
-	     strlen(body),body);
+	     status_line, strlen(body), body);
     write(client_fd, response, strlen(response));
     close(client_fd);
 }        
