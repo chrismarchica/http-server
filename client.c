@@ -59,14 +59,24 @@ void handle_client_request(int client_fd)
     FILE *file = fopen(full_path, "rb");
     const char *status_line;
     const char *content_type = "text/plain"; //default
-
-    char body[8192] = {0};
+    char *body = NULL;
+    
     ssize_t body_len = 0;
 
     if(file){
 	struct stat st;
 	stat(full_path, &st);
 	body_len = st.st_size;
+
+	body = malloc(body_len);
+	if(!body)
+	{
+	   perror("memory allocation failed");
+	   close(client_fd);
+	   fclose(file);
+	   return;
+	}	   
+
 
 	fread(body, 1, body_len, file);
 	fclose(file);
@@ -85,15 +95,39 @@ void handle_client_request(int client_fd)
 	{
 	    content_type = "application/javascript";
 	}
+	 
+        else if (strstr(full_path, ".png")) {
+    	    content_type = "image/png";
+	} 
+	else if (strstr(full_path, ".jpg") || strstr(full_path, ".jpeg")) {
+    	    content_type = "image/jpeg";
+	} 
+	else if (strstr(full_path, ".gif")) {
+    	    content_type = "image/gif";
+	}
 	}
     else
     {
 	//no file has been found
-	body_len = strlen(body);
+	
+	const char *not_found = "404 not found";
+	body_len = strlen(not_found);
+
+	body = malloc(body_len);
+	if(!body)
+	{
+	    perror("malloc failed");
+	    close(client_fd);
+	    return;
+	}
+
 	strncpy(body, "404 Not Found", body_len);
 	
 	status_line = "HTTP/1.1 404 Not Found";
 	content_type = "text/plain";
+    
+
+    	memcpy(body, not_found, body_len);
     }
     //build response
     char response[4096] = {0};
