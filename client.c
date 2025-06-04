@@ -7,7 +7,7 @@
 #include <string.h>
 #include "parse_req.h"
 #include <unistd.h>
-
+#include <sys/stat.h>
 
 int create_client(int server_fd)
 {
@@ -45,29 +45,67 @@ void handle_client_request(int client_fd)
     printf("Could not parse\n");
   }
     //Response
-    const char *status_line = "HTTP/1.1 200 OK";
-    const char *body;
-    if(strcmp(path, "/hello") == 0)
-    {
-      body = "Hello World!\n";
+    //Build file path
+    char full_path[512];
+    
+    //write the path into full_path
+    snprintf(full_path, sizeof(full_path), "static%s",path);
+    //if given the root give index.html
+    if(strcmp(path, "/") == 0){
+	snprintf(full_path, sizeof(full_path), "static/index.html");
     }
-    else if(strcmp(path, "/about") == 0)
-    {
-      body = "C Web server\n";
-    }
+
+    //open file to read the binary
+    FILE *file = fopen(full_path, "rb");
+    const char *status_line;
+    const char *content_type = "text/plain"; //default
+
+    char body[8192] = {0};
+    ssize_t body_len = 0;
+
+    if(file){
+	struct stat st;
+	stat(full_path, &st);
+	body_len = st.st_size;
+
+	fread(body, 1, body_len, file);
+	fclose(file);
+
+	status_line = "HTTP/1.1 200 OK";
+
+	//define file type
+	if(strstr(full_path, ".html")){
+	    content_type = "text/html";	    
+    	}
+	else if(strstr(full_path, ".css"))
+	{
+	    content_type = "text/css";
+	}
+	else if (strstr(full_path, ".js"))
+	{
+	    content_type = "application/javascript";
+	}
+	}
     else
     {
-      body = "Error 404 not found\n";
-      status_line = "HTTP/1.1 404 Not Found";
+	//no file has been found
+	body_len = strlen(body);
+	strncpy(body, "404 Not Found", body_len);
+	
+	status_line = "HTTP/1.1 404 Not Found";
+	content_type = "text/plain";
     }
-    char response[1024];
+    //build response
+    char response[4096] = {0};
     snprintf(response, sizeof(response),
 	     "%s\r\n"
-	     "Content-Type: text/plain\r\n"
+	     "Content-Type: %s\r\n"
 	     "Content-Length: %lu\r\n"
-	     "\r\n"
-	     "%s",
-	     status_line, strlen(body), body);
+	     "\r\n",
+	     status_line, content_type, body_len);
+    //send headers
     write(client_fd, response, strlen(response));
+    //send body
+    write(client_fd, body, body_len);
     close(client_fd);
 }        
