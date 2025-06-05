@@ -83,7 +83,7 @@ void handle_client_request(int client_fd)
 
 	status_line = "HTTP/1.1 200 OK";
 
-	//define file type
+	//define type
 	if(strstr(full_path, ".html")){
 	    content_type = "text/html";	    
     	}
@@ -141,5 +141,6 @@ void handle_client_request(int client_fd)
     write(client_fd, response, strlen(response));
     //send body
     write(client_fd, body, body_len);
+    free(body);
     close(client_fd);
 }        
