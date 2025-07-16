@@ -16,7 +16,7 @@ all: $(OUT)
 
 # Linking final binary
 $(OUT): $(OBJ)
-	$(CC) $(CFLAGS) -o $(OUT) $(OBJ)
+	$(CC) $(CFLAGS) -o $(OUT) $(OBJ) -lpthread
 
 # Compile each .c into .o
 %.o: %.c
