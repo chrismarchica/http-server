@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <pthread.h>
 #include "utils/client.h"
+#include "utils/http.h"
 
 int create_client(int server_fd)
 {
@@ -27,123 +28,51 @@ int create_client(int server_fd)
 }
 void handle_client_request(int client_fd)
 {
-  char buffer[4096];
-  memset(buffer, 0, sizeof(buffer));
-  ssize_t bytes_read = read(client_fd, buffer, sizeof(buffer)-1);
-  if(bytes_read < 0)
-  {
-    perror("read error");
-    close(client_fd);
-    return;
-  }
-  char method[16];
-  char path[256];
-  if(parse_request(buffer, method, sizeof(method), path, sizeof(path))){
+    char buffer[4096];
+    memset(buffer, 0, sizeof(buffer));
+    ssize_t bytes_read = read(client_fd, buffer, sizeof(buffer)-1);
+    if(bytes_read < 0)
+    {
+        perror("read error");
+        close(client_fd);
+        return;
+    }
+    
+    char method[16];
+    char path[256];
+    if(!parse_request(buffer, method, sizeof(method), path, sizeof(path))){
+        printf("Could not parse request\n");
+        send_error_response(client_fd, HTTP_STATUS_400, "Invalid request format");
+        close(client_fd);
+        return;
+    }
+    
     printf("Method: %s\n", method);
     printf("Path: %s\n", path);
-  }
-  else
-  {
-    printf("Could not parse\n");
-  }
-    //Response
-    //Build file path
-    char full_path[512];
     
-    //write the path into full_path
-    snprintf(full_path, sizeof(full_path), "static%s",path);
-    //if given the root give index.html
-    if(strcmp(path, "/") == 0){
-	snprintf(full_path, sizeof(full_path), "static/index.html");
+    // Check if method is supported
+    if (!is_supported_method(method)) {
+        send_error_response(client_fd, HTTP_STATUS_405, "Method not allowed");
+        close(client_fd);
+        return;
     }
-
-    //open file to read the binary
-    FILE *file = fopen(full_path, "rb");
-    const char *status_line;
-    const char *content_type = "text/plain"; //default
-    char *body = NULL;
     
-    ssize_t body_len = 0;
-
-    if(file){
-	struct stat st;
-	stat(full_path, &st);
-	body_len = st.st_size;
-
-	body = malloc(body_len);
-	if(!body)
-	{
-	   perror("memory allocation failed");
-	   close(client_fd);
-	   fclose(file);
-	   return;
-	}	   
-
-
-	fread(body, 1, body_len, file);
-	fclose(file);
-
-	status_line = "HTTP/1.1 200 OK";
-
-	//define type
-	if(strstr(full_path, ".html")){
-	    content_type = "text/html";	    
-    	}
-	else if(strstr(full_path, ".css"))
-	{
-	    content_type = "text/css";
-	}
-	else if (strstr(full_path, ".js"))
-	{
-	    content_type = "application/javascript";
-	}
-	 
-        else if (strstr(full_path, ".png")) {
-    	    content_type = "image/png";
-	} 
-	else if (strstr(full_path, ".jpg") || strstr(full_path, ".jpeg")) {
-    	    content_type = "image/jpeg";
-	} 
-	else if (strstr(full_path, ".gif")) {
-    	    content_type = "image/gif";
-	}
-	}
-    else
-    {
-	//no file has been found
-	
-	const char *not_found = "404 not found";
-	body_len = strlen(not_found);
-
-	body = malloc(body_len);
-	if(!body)
-	{
-	    perror("malloc failed");
-	    close(client_fd);
-	    return;
-	}
-
-	strncpy(body, "404 Not Found", body_len);
-	
-	status_line = "HTTP/1.1 404 Not Found";
-	content_type = "text/plain";
-    
-
-    	memcpy(body, not_found, body_len);
+    // Route to appropriate handler based on HTTP method
+    int result = -1;
+    if (strcmp(method, HTTP_METHOD_GET) == 0) {
+        result = handle_get_request(client_fd, path);
+    } else if (strcmp(method, HTTP_METHOD_POST) == 0) {
+        result = handle_post_request(client_fd, path);
+    } else if (strcmp(method, HTTP_METHOD_PUT) == 0) {
+        result = handle_put_request(client_fd, path);
+    } else if (strcmp(method, HTTP_METHOD_DELETE) == 0) {
+        result = handle_delete_request(client_fd, path);
     }
-    //build response
-    char response[4096] = {0};
-    snprintf(response, sizeof(response),
-	     "%s\r\n"
-	     "Content-Type: %s\r\n"
-	     "Content-Length: %lu\r\n"
-	     "\r\n",
-	     status_line, content_type, body_len);
-    //send headers
-    write(client_fd, response, strlen(response));
-    //send body
-    write(client_fd, body, body_len);
-    free(body);
+    
+    if (result != 0) {
+        printf("Error handling request: %s %s\n", method, path);
+    }
+    
     close(client_fd);
 }        
 

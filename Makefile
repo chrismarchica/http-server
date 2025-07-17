@@ -6,7 +6,7 @@ CFLAGS = -Wall -Wextra -g
 OUT = server
 
 # Source files
-SRC = src/main.c src/server.c src/client.c src/parse_req.c
+SRC = src/main.c src/server.c src/client.c src/parse_req.c src/http.c
 
 # Object files (built from source files)
 OBJ = $(SRC:.c=.o)
