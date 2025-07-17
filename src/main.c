@@ -1,13 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "server.h"
+#include "utils/server.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
-#include "parse_req.h"
+#include "utils/parse_req.h"
 #include <unistd.h>
-#include "client.h"
+#include "utils/client.h"
 #include <signal.h>
 
 // Global thread pool for signal handler

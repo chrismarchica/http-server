@@ -6,7 +6,7 @@ CFLAGS = -Wall -Wextra -g
 OUT = server
 
 # Source files
-SRC = main.c server.c client.c parse_req.c
+SRC = src/main.c src/server.c src/client.c src/parse_req.c
 
 # Object files (built from source files)
 OBJ = $(SRC:.c=.o)
@@ -22,7 +22,11 @@ $(OUT): $(OBJ)
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# Compile source files in src/ directory
+src/%.o: src/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
 # Cleanup rule
 clean:
-	rm -f *.o $(OUT)
+	rm -f *.o src/*.o $(OUT)
 
