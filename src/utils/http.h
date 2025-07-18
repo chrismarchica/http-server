@@ -15,6 +15,7 @@
 #define HTTP_STATUS_200 "HTTP/1.1 200 OK"
 #define HTTP_STATUS_201 "HTTP/1.1 201 Created"
 #define HTTP_STATUS_204 "HTTP/1.1 204 No Content"
+#define HTTP_STATUS_403 "HTTP/1.1 403 Forbidden"
 #define HTTP_STATUS_400 "HTTP/1.1 400 Bad Request"
 #define HTTP_STATUS_404 "HTTP/1.1 404 Not Found"
 #define HTTP_STATUS_405 "HTTP/1.1 405 Method Not Allowed"

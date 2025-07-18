@@ -1,6 +1,7 @@
 #include "utils/http.h"
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <limits.h>
 
 void send_http_response(int client_fd, const char *status, const char *content_type, const char *body) {
     size_t body_len = body ? strlen(body) : 0;
@@ -63,8 +64,27 @@ int handle_get_request(int client_fd, const char *path) {
     if (strcmp(path, "/") == 0) {
         snprintf(full_path, sizeof(full_path), "src/static/index.html");
     }
+
+    // Sanitize the file path to prevent directory traversal
+    char resolved_path[PATH_MAX];
+    if (realpath(full_path, resolved_path) == NULL) {
+        send_error_response(client_fd, HTTP_STATUS_404, "File not found");
+        return -1;
+    }
+
+    // Verify the resolved path is within the static directory
+    char static_dir_abs[PATH_MAX];
+    if (realpath("src/static", static_dir_abs) == NULL) {
+        send_error_response(client_fd, HTTP_STATUS_500, "Internal server error");
+        return -1;
+    }
+
+    if (strncmp(resolved_path, static_dir_abs, strlen(static_dir_abs)) != 0) {
+        send_error_response(client_fd, HTTP_STATUS_403, "Forbidden");
+        return -1;
+    }
     
-    FILE *file = fopen(full_path, "rb");
+    FILE *file = fopen(resolved_path, "rb");
     if (!file) {
         send_error_response(client_fd, HTTP_STATUS_404, "File not found");
         return -1;
@@ -72,7 +92,7 @@ int handle_get_request(int client_fd, const char *path) {
     
     // Get file size
     struct stat st;
-    if (stat(full_path, &st) != 0) {
+    if (stat(resolved_path, &st) != 0) {
         fclose(file);
         send_error_response(client_fd, HTTP_STATUS_500, "Failed to get file info");
         return -1;
@@ -97,7 +117,7 @@ int handle_get_request(int client_fd, const char *path) {
     }
     
     // Send response
-    const char *content_type = get_content_type(full_path);
+    const char *content_type = get_content_type(resolved_path);
     send_http_response(client_fd, HTTP_STATUS_200, content_type, body);
     free(body);
     
