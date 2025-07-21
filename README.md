@@ -1,124 +1,242 @@
-# Multi-threaded HTTP Server in C
+# 🚀 Multi-Threaded HTTP Server in C
 
-This project is a multi-threaded HTTP server written in C. It can serve static files (HTML, JS, images, etc.) from the `src/static/` directory and is designed for learning and experimentation with sockets, threading, and basic HTTP protocol handling.
+A high-performance, feature-rich HTTP server implemented in C with modern backend engineering practices. This project demonstrates advanced systems programming concepts and is perfect for showcasing backend development skills.
 
-## Features
-- **Full HTTP Method Support**: GET, POST, PUT, DELETE with proper status codes
-- Serves static files from `src/static/` (HTML, JS, images, etc.)
-- Multi-threaded: uses a thread pool to handle multiple clients concurrently
-- Graceful shutdown on SIGINT/SIGTERM
-- Simple HTTP request parsing
-- Proper HTTP status codes and error handling
-- Extensible C codebase with clear separation of concerns
+## ✨ Features
 
-## Project Structure
-```
-http-server/
-├── src/
-│   ├── main.c            # Entry point, server loop, signal handling
-│   ├── server.c          # Server socket setup
-│   ├── client.c          # Client connection, thread pool, request handling
-│   ├── parse_req.c       # HTTP request parsing
-│   ├── http.c            # HTTP method handlers and response functions
-│   ├── utils/
-│   │   ├── server.h      # Server API
-│   │   ├── client.h      # Client/thread pool API
-│   │   ├── parse_req.h   # Request parsing API
-│   │   └── http.h        # HTTP constants and response API
-│   └── static/           # Static files served by the server
-│       ├── index.html
-│       ├── nav.html
-│       ├── test.js
-│       └── IMG_3851.JPG
-├── Makefile              # Build configuration
-├── README.md             # Project documentation
-└── .gitignore
-```
+### 🏗️ **Core Architecture**
+- **Multi-threaded design** with thread pool for concurrent request handling
+- **Non-blocking I/O** with efficient socket management
+- **Graceful shutdown** with signal handling (SIGINT, SIGTERM)
+- **Memory-safe** with proper resource management and cleanup
 
-## Build Instructions
+### 🌐 **HTTP Protocol Support**
+- **Full HTTP/1.1** request/response handling
+- **All major HTTP methods**: GET, POST, PUT, DELETE, OPTIONS
+- **Request parsing** with headers, body, and query string support
+- **Proper HTTP status codes** and error handling
+- **Content-Type detection** for various file types
+- **CORS support** for cross-origin requests
 
-You need GCC and pthreads (standard on Linux). To build:
+### 🔧 **RESTful API**
+- **Complete CRUD operations** for user management
+- **JSON request/response** handling
+- **RESTful URL patterns** (`/api/users`, `/api/users/{id}`)
+- **Proper HTTP status codes** (200, 201, 204, 400, 404, 405, 500)
+- **In-memory database** with thread-safe operations
 
-```sh
+### 📊 **Monitoring & Observability**
+- **Health check endpoint** (`/health`) with uptime information
+- **Real-time metrics** (`/metrics`) with request statistics
+- **Performance monitoring** (total requests, success rate, error tracking)
+- **Request logging** with timestamps and method/path tracking
+
+### 🛡️ **Security Features**
+- **Path traversal protection** with `realpath()` validation
+- **Input sanitization** and validation
+- **Directory access restrictions** (static files only)
+- **Request size limits** and buffer overflow protection
+
+### 📁 **Static File Serving**
+- **Efficient file serving** with proper MIME type detection
+- **Large file support** with streaming
+- **Directory traversal protection**
+- **Support for**: HTML, CSS, JS, JSON, images (PNG, JPG, GIF)
+
+### 🎯 **Developer Experience**
+- **Clean, modular codebase** with separation of concerns
+- **Comprehensive error handling** and logging
+- **Easy-to-use Makefile** for building and development
+- **Interactive test page** for API demonstration
+
+## 🚀 Quick Start
+
+### Prerequisites
+- GCC compiler
+- Make
+- Linux/Unix environment (uses POSIX threads and sockets)
+
+### Build & Run
+```bash
+# Clone and navigate to project
+cd http-server
+
+# Build the server
 make
-```
 
-This will produce a `server` executable in the project root.
-
-To clean up build artifacts:
-```sh
-make clean
-```
-
-## Run Instructions
-
-From the project root, run:
-```sh
+# Run the server (starts on port 3000)
 ./server
+
+# Or build and run in one command
+make && ./server
 ```
 
-The server will start on port 3000. You can access it in your browser at:
+### Test the Server
+```bash
+# Health check
+curl http://localhost:3000/health
+
+# Get metrics
+curl http://localhost:3000/metrics
+
+# API endpoints
+curl http://localhost:3000/api/users
+curl -X POST http://localhost:3000/api/users
+curl http://localhost:3000/api/users/1
+curl -X PUT http://localhost:3000/api/users/1
+curl -X DELETE http://localhost:3000/api/users/1
+
+# Static files
+curl http://localhost:3000/
+curl http://localhost:3000/api-test.html
 ```
-http://localhost:3000/
+
+## 📋 API Documentation
+
+### Health Check
+```http
+GET /health
+```
+Returns server health status and uptime.
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "uptime": 1234,
+  "timestamp": "Wed Dec 13 10:30:00 2023"
+}
 ```
 
-## How It Works
-- The server listens on port 3000.
-- For each incoming connection, a client socket is created and handed off to a thread pool.
-- Each worker thread parses the HTTP request and routes it to the appropriate handler based on the HTTP method:
-  - **GET**: Serves static files from `src/static/` directory
-  - **POST**: Creates new resources (returns 201 Created)
-  - **PUT**: Updates existing resources (returns 200 OK)
-  - **DELETE**: Removes resources (returns 204 No Content)
-- Proper HTTP status codes are returned for all operations
-- Content-Type is set based on file extension (supports HTML, CSS, JS, PNG, JPG, GIF, etc.)
-- Unsupported methods return 405 Method Not Allowed
+### Metrics
+```http
+GET /metrics
+```
+Returns server performance metrics.
 
-## API Overview
+**Response:**
+```json
+{
+  "total_requests": 150,
+  "successful_requests": 145,
+  "error_requests": 5,
+  "uptime_seconds": 3600,
+  "success_rate": 96.67
+}
+```
 
-### Server API (`utils/server.h`)
-- `int init_server(int port);`  
-  Initializes and binds a server socket on the given port.
+### Users API
 
-### Client/Thread Pool API (`utils/client.h`)
-- `int create_client(int server_fd);`  
-  Accepts a new client connection.
-- `void handle_client_request(int client_fd);`  
-  Handles a single HTTP request/response cycle.
-- `thread_pool_t *create_thread_pool(int thread_count, int queue_size);`  
-  Creates a thread pool for handling clients.
-- `void destroy_thread_pool(thread_pool_t *pool);`  
-  Cleans up the thread pool.
-- `int add_client_to_pool(thread_pool_t *pool, int client_fd);`  
-  Adds a client socket to the thread pool's queue.
+#### List All Users
+```http
+GET /api/users
+```
 
-### Request Parsing API (`utils/parse_req.h`)
-- `int parse_request(const char *buffer, char *method, size_t msize, char *path, size_t psize);`  
-  Parses the HTTP request line into method and path.
+#### Get Specific User
+```http
+GET /api/users/{id}
+```
 
-### HTTP API (`utils/http.h`)
-- `void send_http_response(int client_fd, const char *status, const char *content_type, const char *body);`  
-  Sends a complete HTTP response with headers and body.
-- `void send_error_response(int client_fd, const char *status, const char *message);`  
-  Sends an HTML error response.
-- `int handle_get_request(int client_fd, const char *path);`  
-  Handles GET requests for static files.
-- `int handle_post_request(int client_fd, const char *path);`  
-  Handles POST requests for creating resources.
-- `int handle_put_request(int client_fd, const char *path);`  
-  Handles PUT requests for updating resources.
-- `int handle_delete_request(int client_fd, const char *path);`  
-  Handles DELETE requests for removing resources.
+#### Create User
+```http
+POST /api/users
+```
 
-## Static Files
-Place your static files (HTML, JS, images, etc.) in `src/static/`. The server will serve these at the root URL path. For example:
-- `src/static/index.html` → `http://localhost:3000/`
-- `src/static/test.js` → `http://localhost:3000/test.js`
-- `src/static/IMG_3851.JPG` → `http://localhost:3000/IMG_3851.JPG`
-- `src/static/api-test.html` → `http://localhost:3000/api-test.html` (test HTTP methods)
+#### Update User
+```http
+PUT /api/users/{id}
+```
 
-## Testing HTTP Methods
-Visit `http://localhost:3000/api-test.html` to test all supported HTTP methods (GET, POST, PUT, DELETE) with a web interface.
+#### Delete User
+```http
+DELETE /api/users/{id}
+```
 
-## License
-MIT License (see LICENSE file if present)
+## 🏗️ Architecture
+
+```
+src/
+├── main.c          # Server entry point and signal handling
+├── server.c        # Socket initialization and binding
+├── client.c        # Client handling and thread pool
+├── http.c          # HTTP protocol implementation
+├── parse_req.c     # Request parsing and validation
+├── api.c           # RESTful API endpoints
+└── utils/          # Header files
+    ├── server.h
+    ├── client.h
+    ├── http.h
+    └── parse_req.h
+```
+
+### Key Components
+
+1. **Thread Pool**: Manages worker threads for concurrent request handling
+2. **Request Parser**: Parses HTTP requests with headers and body
+3. **HTTP Handler**: Implements HTTP protocol and response generation
+4. **API Layer**: RESTful endpoints with JSON handling
+5. **Static File Server**: Efficient file serving with security
+6. **Metrics System**: Real-time performance monitoring
+
+## 🔧 Development
+
+### Building
+```bash
+make          # Build the server
+make clean    # Clean build artifacts
+```
+
+### Adding New Features
+1. **New API endpoints**: Add to `api.c`
+2. **HTTP methods**: Extend `http.c`
+3. **Request parsing**: Modify `parse_req.c`
+4. **Threading**: Update `client.c`
+
+### Code Style
+- Consistent indentation and naming
+- Comprehensive error handling
+- Memory safety and resource cleanup
+- Clear separation of concerns
+
+## 🎯 Why This Project Stands Out
+
+### For Backend Engineering Internships
+
+1. **Systems Programming**: Demonstrates low-level C programming skills
+2. **Concurrency**: Multi-threading with proper synchronization
+3. **Network Programming**: Socket programming and HTTP protocol
+4. **Performance**: Efficient resource management and optimization
+5. **Security**: Input validation and attack prevention
+6. **Monitoring**: Observability and metrics collection
+7. **API Design**: RESTful principles and JSON handling
+8. **Production-Ready**: Error handling, logging, and graceful shutdown
+
+### Technical Highlights
+
+- **Thread-safe operations** with mutex protection
+- **Memory-efficient** with proper allocation/deallocation
+- **Scalable architecture** with thread pool design
+- **Security-conscious** with input validation
+- **Developer-friendly** with comprehensive documentation
+- **Production features** like health checks and metrics
+
+## 🚀 Future Enhancements
+
+- [ ] **Database Integration** (SQLite/PostgreSQL)
+- [ ] **Authentication & Authorization** (JWT tokens)
+- [ ] **Rate Limiting** and DDoS protection
+- [ ] **HTTPS Support** (SSL/TLS)
+- [ ] **WebSocket Support** for real-time communication
+- [ ] **Configuration Management** (JSON/YAML config files)
+- [ ] **Logging System** with different levels
+- [ ] **Caching Layer** (Redis-like in-memory cache)
+- [ ] **Load Balancing** support
+- [ ] **Docker Containerization**
+
+## 📝 License
+
+This project is open source and available under the MIT License.
+
+---
+
+**Built with ❤️ for demonstrating backend engineering skills**

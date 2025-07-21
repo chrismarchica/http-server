@@ -1,2 +1,5 @@
 *.o
 credentials.json
+server.crt
+server.key
+*.jpg
