@@ -18,7 +18,7 @@ ifeq ($(OPENSSL_AVAILABLE),yes)
     SSL_INFO = "with HTTPS support"
 else
     LIBS = -lpthread
-    SSL_INFO = "HTTP only (OpenSSL not available)"
+    SSL_INFO = "HTTP only - OpenSSL not available"
 endif
 
 # Object files (built from source files)

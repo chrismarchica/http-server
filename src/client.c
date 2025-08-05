@@ -162,7 +162,7 @@ void handle_client_request(int client_fd, void *ssl)
             result = handle_api_health(client_fd, NULL);
         }
 #else
-        result = handle_api_health(client_fd);
+        result = handle_api_health(client_fd, NULL);
 #endif
     }
     // Metrics endpoint
@@ -174,7 +174,7 @@ void handle_client_request(int client_fd, void *ssl)
             result = handle_api_metrics(client_fd, NULL);
         }
 #else
-        result = handle_api_metrics(client_fd);
+        result = handle_api_metrics(client_fd, NULL);
 #endif
     }
     // Users API
@@ -186,7 +186,7 @@ void handle_client_request(int client_fd, void *ssl)
             result = handle_api_users(client_fd, NULL, req.method, req.path, &req);
         }
 #else
-        result = handle_api_users(client_fd, req.method, req.path, &req);
+        result = handle_api_users(client_fd, NULL, req.method, req.path, &req);
 #endif
     }
     // Fall back to static file serving for GET requests
@@ -198,7 +198,7 @@ void handle_client_request(int client_fd, void *ssl)
             result = handle_get_request(client_fd, NULL, req.path);
         }
 #else
-        result = handle_get_request(client_fd, req.path);
+        result = handle_get_request(client_fd, NULL, req.path);
 #endif
     } else if (strcmp(req.method, HTTP_METHOD_POST) == 0) {
 #ifdef USE_SSL
@@ -208,7 +208,7 @@ void handle_client_request(int client_fd, void *ssl)
             result = handle_post_request(client_fd, NULL, req.path);
         }
 #else
-        result = handle_post_request(client_fd, req.path);
+        result = handle_post_request(client_fd, NULL, req.path);
 #endif
     } else if (strcmp(req.method, HTTP_METHOD_PUT) == 0) {
 #ifdef USE_SSL
@@ -218,7 +218,7 @@ void handle_client_request(int client_fd, void *ssl)
             result = handle_put_request(client_fd, NULL, req.path);
         }
 #else
-        result = handle_put_request(client_fd, req.path);
+        result = handle_put_request(client_fd, NULL, req.path);
 #endif
     } else if (strcmp(req.method, HTTP_METHOD_DELETE) == 0) {
 #ifdef USE_SSL
@@ -228,7 +228,7 @@ void handle_client_request(int client_fd, void *ssl)
             result = handle_delete_request(client_fd, NULL, req.path);
         }
 #else
-        result = handle_delete_request(client_fd, req.path);
+        result = handle_delete_request(client_fd, NULL, req.path);
 #endif
     }
     
